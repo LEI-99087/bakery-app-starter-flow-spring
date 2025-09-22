@@ -1,3 +1,12 @@
+# Fabulous Four
+
+| Curso | Número  | Nome          |
+|-------|---------|---------------|
+| LEI   | 99087   | Artur Nobre   |
+| LEI   | 122712  | Joana Pegado  |
+| LEI   | 122714  | Mafalda Costa |
+| LEI   | 122687  | Junzun He     |
+
 # ⚠️ This starter is not recommended ⚠️
 
 **This starter is not recommended for new Vaadin Flow applications. Instead, visit [start.vaadin.com](https://start.vaadin.com/) to configure and download a Vaadin project that reflects the current best practices.**
