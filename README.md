@@ -3,9 +3,9 @@
 | Curso | Número  | Nome          |
 |-------|---------|---------------|
 | LEI   | 99087   | Artur Nobre   |
-| LEI   | 122712  | Joana Pegado  |
+| LEI   | 122687  | Junzun He  |
 | LEI   | 122714  | Mafalda Costa |
-| LEI   | 122687  | Junzun He     |
+| LEI   | 122712  | Joana Pegado     |
 
 # ⚠️ This starter is not recommended ⚠️
 
