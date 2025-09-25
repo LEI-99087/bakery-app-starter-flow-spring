@@ -4,8 +4,8 @@
 |-------|---------|---------------|
 | LEI   | 99087   | Artur Nobre   |
 | LEI   | 122687  | Junzun He  |
-| LEI   | 122714  | Mafalda Costa |
 | LEI   | 122712  | Joana Pegado     |
+| LEI   | 122714  | Mafalda Costa |
 
 # ⚠️ This starter is not recommended ⚠️
 
