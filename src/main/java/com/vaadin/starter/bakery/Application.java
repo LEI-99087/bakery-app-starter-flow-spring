@@ -17,6 +17,28 @@ import com.vaadin.starter.bakery.ui.MainView;
 /**
  * Spring boot web application initializer.
  */
+
+/**
+ * Jun's Test
+ *Ponto de entrada principal para a aplicação Vaadin Bakery.
+ * * Este é o ponto de inicialização do Spring Boot, responsável por configurar
+ * e executar a aplicação web. A anotação {@code @SpringBootApplication}
+ * habilita a configuração automática do Spring.
+ * * <p>
+ * O Javadoc também deve mencionar as configurações chave:
+ * <ul>
+ * <li>**{@code scanBasePackageClasses}**: Define os pacotes onde o Spring deve procurar
+ * componentes (Configuration, View, Service, etc.).</li>
+ * <li>**{@code exclude}**: Exclui a configuração automática de erro do MVC.</li>
+ * <li>**{@code @EnableJpaRepositories}**: Ativa o suporte ao Spring Data JPA para os
+ * repositórios do backend.</li>
+ * <li>**{@code @EntityScan}**: Especifica a localização das classes de entidade JPA.</li>
+ * </ul>
+ * * @author [Seu Nome ou Nome do Grupo] 
+ * @version 1.0
+ * @since 2024-05-20 (Coloque a data de hoje ou a data do início do projeto)
+ */
+
 @SpringBootApplication(scanBasePackageClasses = { SecurityConfiguration.class, MainView.class, Application.class,
 		UserService.class }, exclude = ErrorMvcAutoConfiguration.class)
 @EnableJpaRepositories(basePackageClasses = { UserRepository.class })
