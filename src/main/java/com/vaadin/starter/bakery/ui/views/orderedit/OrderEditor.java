@@ -49,168 +49,228 @@ import com.vaadin.starter.bakery.ui.utils.converters.LocalTimeConverter;
 import com.vaadin.starter.bakery.ui.views.storefront.events.ReviewEvent;
 import com.vaadin.starter.bakery.ui.views.storefront.events.ValueChangeEvent;
 
+/**
+ * Editor component for creating and editing orders in the bakery application.
+ * Provides a form with fields for order details, customer information, and order items.
+ */
 @Tag("order-editor")
 @JsModule("./src/views/orderedit/order-editor.js")
 @SpringComponent
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class OrderEditor extends LitTemplate {
 
-	@Id("title")
-	private H2 title;
+    @Id("title")
+    private H2 title;
 
-	@Id("metaContainer")
-	private Div metaContainer;
+    @Id("metaContainer")
+    private Div metaContainer;
 
-	@Id("orderNumber")
-	private Span orderNumber;
+    @Id("orderNumber")
+    private Span orderNumber;
 
-	@Id("status")
-	private ComboBox<OrderState> status;
+    @Id("status")
+    private ComboBox<OrderState> status;
 
-	@Id("dueDate")
-	private DatePicker dueDate;
+    @Id("dueDate")
+    private DatePicker dueDate;
 
-	@Id("dueTime")
-	private ComboBox<LocalTime> dueTime;
+    @Id("dueTime")
+    private ComboBox<LocalTime> dueTime;
 
-	@Id("pickupLocation")
-	private ComboBox<PickupLocation> pickupLocation;
+    @Id("pickupLocation")
+    private ComboBox<PickupLocation> pickupLocation;
 
-	@Id("customerName")
-	private TextField customerName;
+    @Id("customerName")
+    private TextField customerName;
 
-	@Id("customerNumber")
-	private TextField customerNumber;
+    @Id("customerNumber")
+    private TextField customerNumber;
 
-	@Id("customerDetails")
-	private TextField customerDetails;
+    @Id("customerDetails")
+    private TextField customerDetails;
 
-	@Id("cancel")
-	private Button cancel;
+    @Id("cancel")
+    private Button cancel;
 
-	@Id("review")
-	private Button review;
+    @Id("review")
+    private Button review;
 
-	@Id("itemsContainer")
-	private Div itemsContainer;
+    @Id("itemsContainer")
+    private Div itemsContainer;
 
-	private OrderItemsEditor itemsEditor;
+    private OrderItemsEditor itemsEditor;
 
-	private User currentUser;
+    private User currentUser;
 
-	private BeanValidationBinder<Order> binder = new BeanValidationBinder<>(Order.class);
+    private BeanValidationBinder<Order> binder = new BeanValidationBinder<>(Order.class);
 
-	private final LocalTimeConverter localTimeConverter = new LocalTimeConverter();
+    private final LocalTimeConverter localTimeConverter = new LocalTimeConverter();
 
-	@Autowired
-	public OrderEditor(PickupLocationService locationService, ProductService productService) {
-		DataProvider<PickupLocation, String> locationDataProvider = new CrudEntityDataProvider<>(locationService);
-		DataProvider<Product, String> productDataProvider = new CrudEntityDataProvider<>(productService);
-		itemsEditor = new OrderItemsEditor(productDataProvider);
+    /**
+     * Constructs a new OrderEditor with the specified dependencies.
+     *
+     * @param locationService the service for pickup location data
+     * @param productService the service for product data
+     */
+    @Autowired
+    public OrderEditor(PickupLocationService locationService, ProductService productService) {
+        DataProvider<PickupLocation, String> locationDataProvider = new CrudEntityDataProvider<>(locationService);
+        DataProvider<Product, String> productDataProvider = new CrudEntityDataProvider<>(productService);
+        itemsEditor = new OrderItemsEditor(productDataProvider);
 
-		itemsContainer.add(itemsEditor);
+        itemsContainer.add(itemsEditor);
 
-		cancel.addClickListener(e -> fireEvent(new CancelEvent(this, false)));
-		review.addClickListener(e -> fireEvent(new ReviewEvent(this)));
+        cancel.addClickListener(e -> fireEvent(new CancelEvent(this, false)));
+        review.addClickListener(e -> fireEvent(new ReviewEvent(this)));
 
-		status.setItemLabelGenerator(createItemLabelGenerator(OrderState::getDisplayName));
-		status.setItems(DataProvider.ofItems(OrderState.values()));
-		status.addValueChangeListener(
-				e -> {
-					getElement().setProperty("status", DataProviderUtil.convertIfNotNull(e.getValue(), OrderState::name));
-				});
-		binder.forField(status)
-				.withValidator(new BeanValidator(Order.class, "state"))
-				.bind(Order::getState, (o, s) -> {
-					o.changeState(currentUser, s);
-				});
+        status.setItemLabelGenerator(createItemLabelGenerator(OrderState::getDisplayName));
+        status.setItems(DataProvider.ofItems(OrderState.values()));
+        status.addValueChangeListener(
+                e -> {
+                    getElement().setProperty("status", DataProviderUtil.convertIfNotNull(e.getValue(), OrderState::name));
+                });
+        binder.forField(status)
+                .withValidator(new BeanValidator(Order.class, "state"))
+                .bind(Order::getState, (o, s) -> {
+                    o.changeState(currentUser, s);
+                });
 
-		dueDate.setRequired(true);
-		binder.bind(dueDate, "dueDate");
+        dueDate.setRequired(true);
+        binder.bind(dueDate, "dueDate");
 
-		SortedSet<LocalTime> timeValues = IntStream.rangeClosed(8, 16).mapToObj(i -> LocalTime.of(i, 0))
-				.collect(Collectors.toCollection(TreeSet::new));
-		dueTime.setItems(timeValues);
-		dueTime.setItemLabelGenerator(localTimeConverter::encode);
-		binder.bind(dueTime, "dueTime");
+        SortedSet<LocalTime> timeValues = IntStream.rangeClosed(8, 16).mapToObj(i -> LocalTime.of(i, 0))
+                .collect(Collectors.toCollection(TreeSet::new));
+        dueTime.setItems(timeValues);
+        dueTime.setItemLabelGenerator(localTimeConverter::encode);
+        binder.bind(dueTime, "dueTime");
 
-		pickupLocation.setItemLabelGenerator(createItemLabelGenerator(PickupLocation::getName));
-		pickupLocation.setItems(locationDataProvider);
-		binder.bind(pickupLocation, "pickupLocation");
-		pickupLocation.setRequired(false);
+        pickupLocation.setItemLabelGenerator(createItemLabelGenerator(PickupLocation::getName));
+        pickupLocation.setItems(locationDataProvider);
+        binder.bind(pickupLocation, "pickupLocation");
+        pickupLocation.setRequired(false);
 
-		customerName.setRequired(true);
-		binder.bind(customerName, "customer.fullName");
+        customerName.setRequired(true);
+        binder.bind(customerName, "customer.fullName");
 
-		customerNumber.setRequired(true);
-		binder.bind(customerNumber, "customer.phoneNumber");
+        customerNumber.setRequired(true);
+        binder.bind(customerNumber, "customer.phoneNumber");
 
-		binder.bind(customerDetails, "customer.details");
+        binder.bind(customerDetails, "customer.details");
 
-		itemsEditor.setRequiredIndicatorVisible(true);
-		binder.bind(itemsEditor, "items");
+        itemsEditor.setRequiredIndicatorVisible(true);
+        binder.bind(itemsEditor, "items");
 
-		itemsEditor.addPriceChangeListener(e -> setTotalPrice(e.getTotalPrice()));
+        itemsEditor.addPriceChangeListener(e -> setTotalPrice(e.getTotalPrice()));
 
-		ComponentUtil.addListener(itemsEditor, ValueChangeEvent.class, e -> review.setEnabled(hasChanges()));
-		binder.addValueChangeListener(e -> {
-			if (e.getOldValue() != null) {
-				review.setEnabled(hasChanges());
-			}
-		});
-	}
+        ComponentUtil.addListener(itemsEditor, ValueChangeEvent.class, e -> review.setEnabled(hasChanges()));
+        binder.addValueChangeListener(e -> {
+            if (e.getOldValue() != null) {
+                review.setEnabled(hasChanges());
+            }
+        });
+    }
 
-	public boolean hasChanges() {
-		return binder.hasChanges() || itemsEditor.hasChanges();
-	}
+    /**
+     * Checks if there are unsaved changes in the editor.
+     *
+     * @return true if there are unsaved changes, false otherwise
+     */
+    public boolean hasChanges() {
+        return binder.hasChanges() || itemsEditor.hasChanges();
+    }
 
-	public void clear() {
-		binder.readBean(null);
-		itemsEditor.setValue(null);
-	}
+    /**
+     * Clears the editor by resetting all fields to null.
+     */
+    public void clear() {
+        binder.readBean(null);
+        itemsEditor.setValue(null);
+    }
 
-	public void close() {
-		setTotalPrice(0);
-	}
+    /**
+     * Closes the editor and resets the total price display.
+     */
+    public void close() {
+        setTotalPrice(0);
+    }
 
-	public void write(Order order) throws ValidationException {
-		binder.writeBean(order);
-	}
+    /**
+     * Writes the form data to the order entity.
+     *
+     * @param order the order entity to write data to
+     * @throws ValidationException if validation fails during write operation
+     */
+    public void write(Order order) throws ValidationException {
+        binder.writeBean(order);
+    }
 
-	public void read(Order order, boolean isNew) {
-		binder.readBean(order);
+    /**
+     * Reads data from the order entity into the form fields.
+     *
+     * @param order the order entity to read data from
+     * @param isNew true if creating a new order, false if editing an existing order
+     */
+    public void read(Order order, boolean isNew) {
+        binder.readBean(order);
 
-		this.orderNumber.setText(isNew ? "" : order.getId().toString());
-		title.setVisible(isNew);
-		metaContainer.setVisible(!isNew);
+        this.orderNumber.setText(isNew ? "" : order.getId().toString());
+        title.setVisible(isNew);
+        metaContainer.setVisible(!isNew);
 
-		if (order.getState() != null) {
-			getElement().setProperty("status", order.getState().name());
-		}
+        if (order.getState() != null) {
+            getElement().setProperty("status", order.getState().name());
+        }
 
-		review.setEnabled(false);
-	}
+        review.setEnabled(false);
+    }
 
-	public Stream<HasValue<?, ?>> validate() {
-		Stream<HasValue<?, ?>> errorFields = binder.validate().getFieldValidationErrors().stream()
-				.map(BindingValidationStatus::getField);
+    /**
+     * Validates all form fields and returns a stream of fields with validation errors.
+     *
+     * @return a stream of fields that have validation errors
+     */
+    public Stream<HasValue<?, ?>> validate() {
+        Stream<HasValue<?, ?>> errorFields = binder.validate().getFieldValidationErrors().stream()
+                .map(BindingValidationStatus::getField);
 
-		return Stream.concat(errorFields, itemsEditor.validate());
-	}
+        return Stream.concat(errorFields, itemsEditor.validate());
+    }
 
-	public Registration addReviewListener(ComponentEventListener<ReviewEvent> listener) {
-		return addListener(ReviewEvent.class, listener);
-	}
+    /**
+     * Adds a listener for review events.
+     *
+     * @param listener the listener to be notified when review is triggered
+     * @return a registration for the listener
+     */
+    public Registration addReviewListener(ComponentEventListener<ReviewEvent> listener) {
+        return addListener(ReviewEvent.class, listener);
+    }
 
-	public Registration addCancelListener(ComponentEventListener<CancelEvent> listener) {
-		return addListener(CancelEvent.class, listener);
-	}
+    /**
+     * Adds a listener for cancel events.
+     *
+     * @param listener the listener to be notified when cancel is triggered
+     * @return a registration for the listener
+     */
+    public Registration addCancelListener(ComponentEventListener<CancelEvent> listener) {
+        return addListener(CancelEvent.class, listener);
+    }
 
-	private void setTotalPrice(int totalPrice) {
-		getElement().getProperty("totalPrice", FormattingUtils.formatAsCurrency(totalPrice));
-	}
+    /**
+     * Sets the total price display in the editor.
+     *
+     * @param totalPrice the total price in cents to display
+     */
+    private void setTotalPrice(int totalPrice) {
+        getElement().setProperty("totalPrice", FormattingUtils.formatAsCurrency(totalPrice));
+    }
 
-	public void setCurrentUser(User currentUser) {
-		this.currentUser = currentUser;
-	}
+    /**
+     * Sets the current user for the editor.
+     *
+     * @param currentUser the currently authenticated user
+     */
+    public void setCurrentUser(User currentUser) {
+        this.currentUser = currentUser;
+    }
 }

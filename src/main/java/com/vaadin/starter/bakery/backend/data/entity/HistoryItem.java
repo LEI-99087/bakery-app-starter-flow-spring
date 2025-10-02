@@ -10,61 +10,119 @@ import jakarta.validation.constraints.Size;
 
 import com.vaadin.starter.bakery.backend.data.OrderState;
 
+/**
+ * Represents a history item that tracks state changes and events in an order's lifecycle.
+ * <p>
+ * Each HistoryItem records who performed an action, when it was performed,
+ * what state change occurred (if any), and a descriptive message.
+ * </p>
+ */
 @Entity
 public class HistoryItem extends AbstractEntity {
 
-	private OrderState newState;
+    private OrderState newState;
 
-	@NotBlank
-	@Size(max = 255)
-	private String message;
+    @NotBlank
+    @Size(max = 255)
+    private String message;
 
-	@NotNull
-	private LocalDateTime timestamp;
-	@ManyToOne
-	@NotNull
-	private User createdBy;
+    @NotNull
+    private LocalDateTime timestamp;
 
-	HistoryItem() {
-		// Empty constructor is needed by Spring Data / JPA
-	}
+    @ManyToOne
+    @NotNull
+    private User createdBy;
 
-	public HistoryItem(User createdBy, String message) {
-		this.createdBy = createdBy;
-		this.message = message;
-		timestamp = LocalDateTime.now();
-	}
+    /**
+     * Empty constructor is needed by Spring Data / JPA.
+     */
+    HistoryItem() {
+        // Empty constructor is needed by Spring Data / JPA
+    }
 
-	public OrderState getNewState() {
-		return newState;
-	}
+    /**
+     * Constructs a new HistoryItem with the specified creator and message.
+     * The timestamp is automatically set to the current date and time.
+     *
+     * @param createdBy the user who created this history item
+     * @param message the descriptive message for this history item
+     */
+    public HistoryItem(User createdBy, String message) {
+        this.createdBy = createdBy;
+        this.message = message;
+        timestamp = LocalDateTime.now();
+    }
 
-	public void setNewState(OrderState newState) {
-		this.newState = newState;
-	}
+    /**
+     * Gets the new state that was set by this history item.
+     *
+     * @return the OrderState that was set, or null if no state change occurred
+     */
+    public OrderState getNewState() {
+        return newState;
+    }
 
-	public String getMessage() {
-		return message;
-	}
+    /**
+     * Sets the new state that was set by this history item.
+     *
+     * @param newState the OrderState that was set
+     */
+    public void setNewState(OrderState newState) {
+        this.newState = newState;
+    }
 
-	public void setMessage(String message) {
-		this.message = message;
-	}
+    /**
+     * Gets the descriptive message for this history item.
+     *
+     * @return the history message
+     */
+    public String getMessage() {
+        return message;
+    }
 
-	public LocalDateTime getTimestamp() {
-		return timestamp;
-	}
+    /**
+     * Sets the descriptive message for this history item.
+     *
+     * @param message the history message to set
+     */
+    public void setMessage(String message) {
+        this.message = message;
+    }
 
-	public void setTimestamp(LocalDateTime timestamp) {
-		this.timestamp = timestamp;
-	}
+    /**
+     * Gets the timestamp when this history item was created.
+     *
+     * @return the creation timestamp
+     */
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
 
-	public User getCreatedBy() {
-		return createdBy;
-	}
+    /**
+     * Sets the timestamp when this history item was created.
+     *
+     * @param timestamp the creation timestamp to set
+     */
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
 
-	public void setCreatedBy(User createdBy) {
-		this.createdBy = createdBy;
-	}
+    /**
+     * Gets the user who created this history item.
+     *
+     * @return the user who created this history item
+     */
+    public User getCreatedBy() {
+        return createdBy;
+    }
+
+    /**
+     * Sets the user who created this history item.
+     *
+     * @param createdBy the user who created this history item
+     */
+    public void setCreatedBy(User createdBy) {
+        this.createdBy = createdBy;
+    }
 
 }

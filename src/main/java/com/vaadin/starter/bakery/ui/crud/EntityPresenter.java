@@ -20,223 +20,377 @@ import com.vaadin.starter.bakery.ui.utils.messages.CrudErrorMessage;
 import com.vaadin.starter.bakery.ui.utils.messages.Message;
 import com.vaadin.starter.bakery.ui.views.EntityView;
 
+/**
+ * Presenter class for managing entity operations in the UI.
+ * Handles business logic for CRUD operations, validation, and user interactions
+ * for entity views.
+ *
+ * @param <T> the type of entity this presenter handles, must extend AbstractEntity
+ * @param <V> the type of view this presenter manages, must extend EntityView
+ */
 public class EntityPresenter<T extends AbstractEntity, V extends EntityView<T>>
-	implements HasLogger {
+        implements HasLogger {
 
-	private CrudService<T> crudService;
+    private CrudService<T> crudService;
 
-	private CurrentUser currentUser;
+    private CurrentUser currentUser;
 
-	private V view;
+    private V view;
 
-	private EntityPresenterState<T> state = new EntityPresenterState<T>();
+    private EntityPresenterState<T> state = new EntityPresenterState<T>();
 
-	public EntityPresenter(
-		CrudService<T> crudService, CurrentUser currentUser) {
-		this.crudService = crudService;
-		this.currentUser = currentUser;
-	}
+    /**
+     * Constructs a new EntityPresenter with the specified dependencies.
+     *
+     * @param crudService the service used for entity operations
+     * @param currentUser the currently authenticated user
+     */
+    public EntityPresenter(
+            CrudService<T> crudService, CurrentUser currentUser) {
+        this.crudService = crudService;
+        this.currentUser = currentUser;
+    }
 
-	public void setView(V view) {
-		this.view = view;
-	}
+    /**
+     * Sets the view that this presenter manages.
+     *
+     * @param view the view instance
+     */
+    public void setView(V view) {
+        this.view = view;
+    }
 
-	public V getView() {
-		return view;
-	}
+    /**
+     * Gets the view managed by this presenter.
+     *
+     * @return the view instance
+     */
+    public V getView() {
+        return view;
+    }
 
-	public void delete(CrudOperationListener<T> onSuccess) {
-		Message CONFIRM_DELETE = Message.CONFIRM_DELETE.createMessage();
-		confirmIfNecessaryAndExecute(true, CONFIRM_DELETE, () -> {
-			if (executeOperation(() -> crudService.delete(currentUser.getUser(),
-				state.getEntity()))) {
-				onSuccess.execute(state.getEntity());
-			}
-		}, () -> {
-		});
-	}
+    /**
+     * Deletes the current entity after confirmation if necessary.
+     *
+     * @param onSuccess callback to execute after successful deletion
+     */
+    public void delete(CrudOperationListener<T> onSuccess) {
+        Message CONFIRM_DELETE = Message.CONFIRM_DELETE.createMessage();
+        confirmIfNecessaryAndExecute(true, CONFIRM_DELETE, () -> {
+            if (executeOperation(() -> crudService.delete(currentUser.getUser(),
+                    state.getEntity()))) {
+                onSuccess.execute(state.getEntity());
+            }
+        }, () -> {
+        });
+    }
 
-	public void save(CrudOperationListener<T> onSuccess) {
-		if (executeOperation(() -> saveEntity())) {
-			onSuccess.execute(state.getEntity());
-		}
-	}
+    /**
+     * Saves the current entity.
+     *
+     * @param onSuccess callback to execute after successful save
+     */
+    public void save(CrudOperationListener<T> onSuccess) {
+        if (executeOperation(() -> saveEntity())) {
+            onSuccess.execute(state.getEntity());
+        }
+    }
 
-	public boolean executeUpdate(UnaryOperator<T> updater) {
-		return executeOperation(() -> {
-			state.updateEntity(updater.apply(getEntity()), isNew());
-		});
-	}
+    /**
+     * Executes an update operation on the current entity.
+     *
+     * @param updater function that takes the current entity and returns the updated entity
+     * @return true if the update was successful, false otherwise
+     */
+    public boolean executeUpdate(UnaryOperator<T> updater) {
+        return executeOperation(() -> {
+            state.updateEntity(updater.apply(getEntity()), isNew());
+        });
+    }
 
-	private boolean executeOperation(Runnable operation) {
-		try {
-			operation.run();
-			return true;
-		}
-		catch (UserFriendlyDataException e) {
-			// Commit failed because of application-level data constraints
-			consumeError(e, e.getMessage(), true);
-		}
-		catch (DataIntegrityViolationException e) {
-			// Commit failed because of validation errors
-			consumeError(
-				e, CrudErrorMessage.OPERATION_PREVENTED_BY_REFERENCES, true);
-		}
-		catch (OptimisticLockingFailureException e) {
-			consumeError(e, CrudErrorMessage.CONCURRENT_UPDATE, true);
-		}
-		catch (EntityNotFoundException e) {
-			consumeError(e, CrudErrorMessage.ENTITY_NOT_FOUND, false);
-		}
-		catch (ConstraintViolationException e) {
-			consumeError(e, CrudErrorMessage.REQUIRED_FIELDS_MISSING, false);
-		}
-		return false;
-	}
+    /**
+     * Executes a CRUD operation and handles any exceptions that may occur.
+     *
+     * @param operation the operation to execute
+     * @return true if the operation completed successfully, false otherwise
+     */
+    private boolean executeOperation(Runnable operation) {
+        try {
+            operation.run();
+            return true;
+        }
+        catch (UserFriendlyDataException e) {
+            // Commit failed because of application-level data constraints
+            consumeError(e, e.getMessage(), true);
+        }
+        catch (DataIntegrityViolationException e) {
+            // Commit failed because of validation errors
+            consumeError(
+                    e, CrudErrorMessage.OPERATION_PREVENTED_BY_REFERENCES, true);
+        }
+        catch (OptimisticLockingFailureException e) {
+            consumeError(e, CrudErrorMessage.CONCURRENT_UPDATE, true);
+        }
+        catch (EntityNotFoundException e) {
+            consumeError(e, CrudErrorMessage.ENTITY_NOT_FOUND, false);
+        }
+        catch (ConstraintViolationException e) {
+            consumeError(e, CrudErrorMessage.REQUIRED_FIELDS_MISSING, false);
+        }
+        return false;
+    }
 
-	private void consumeError(
-		Exception e, String message, boolean isPersistent) {
-		getLogger().debug(message, e);
-		view.showError(message, isPersistent);
-	}
+    /**
+     * Handles errors by logging them and showing user-friendly error messages.
+     *
+     * @param e the exception that occurred
+     * @param message the user-friendly error message to display
+     * @param isPersistent whether the error message should be persistent
+     */
+    private void consumeError(
+            Exception e, String message, boolean isPersistent) {
+        getLogger().debug(message, e);
+        view.showError(message, isPersistent);
+    }
 
-	private void saveEntity() {
-		state.updateEntity(
-			crudService.save(currentUser.getUser(), state.getEntity()),
-			isNew());
-	}
+    /**
+     * Saves the current entity using the CRUD service.
+     */
+    private void saveEntity() {
+        state.updateEntity(
+                crudService.save(currentUser.getUser(), state.getEntity()),
+                isNew());
+    }
 
-	public boolean writeEntity() {
-		try {
-			view.write(state.getEntity());
-			return true;
-		}
-		catch (ValidationException e) {
-			view.showError(CrudErrorMessage.REQUIRED_FIELDS_MISSING, false);
-			return false;
-		}
-		catch (NullPointerException e) {
-			return false;
-		}
-	}
+    /**
+     * Writes the entity data to the view.
+     *
+     * @return true if the write operation was successful, false otherwise
+     */
+    public boolean writeEntity() {
+        try {
+            view.write(state.getEntity());
+            return true;
+        }
+        catch (ValidationException e) {
+            view.showError(CrudErrorMessage.REQUIRED_FIELDS_MISSING, false);
+            return false;
+        }
+        catch (NullPointerException e) {
+            return false;
+        }
+    }
 
-	public void close() {
-		state.clear();
-		view.clear();
-	}
+    /**
+     * Closes the current entity view and clears the state.
+     */
+    public void close() {
+        state.clear();
+        view.clear();
+    }
 
-	public void cancel(Runnable onConfirmed, Runnable onCancelled) {
-		confirmIfNecessaryAndExecute(
-			view.isDirty(),
-			Message.UNSAVED_CHANGES.createMessage(state.getEntityName()),
-			() -> {
-				view.clear();
-				onConfirmed.run();
-			}, onCancelled);
-	}
+    /**
+     * Cancels the current operation, with confirmation if there are unsaved changes.
+     *
+     * @param onConfirmed callback to execute if cancellation is confirmed
+     * @param onCancelled callback to execute if cancellation is cancelled by user
+     */
+    public void cancel(Runnable onConfirmed, Runnable onCancelled) {
+        confirmIfNecessaryAndExecute(
+                view.isDirty(),
+                Message.UNSAVED_CHANGES.createMessage(state.getEntityName()),
+                () -> {
+                    view.clear();
+                    onConfirmed.run();
+                }, onCancelled);
+    }
 
-	private void confirmIfNecessaryAndExecute(
-		boolean needsConfirmation, Message message, Runnable onConfirmed,
-		Runnable onCancelled) {
-		if (needsConfirmation) {
-			showConfirmationRequest(message, onConfirmed, onCancelled);
-		}
-		else {
-			onConfirmed.run();
-		}
-	}
+    /**
+     * Executes an operation with confirmation if necessary.
+     *
+     * @param needsConfirmation whether confirmation is required
+     * @param message the confirmation message to display
+     * @param onConfirmed callback to execute if operation is confirmed
+     * @param onCancelled callback to execute if operation is cancelled
+     */
+    private void confirmIfNecessaryAndExecute(
+            boolean needsConfirmation, Message message, Runnable onConfirmed,
+            Runnable onCancelled) {
+        if (needsConfirmation) {
+            showConfirmationRequest(message, onConfirmed, onCancelled);
+        }
+        else {
+            onConfirmed.run();
+        }
+    }
 
-	private void showConfirmationRequest(
-		Message message, Runnable onOk, Runnable onCancel) {
-		view.getConfirmDialog().setText(message.getMessage());
-		view.getConfirmDialog().setHeader(message.getCaption());
-		view.getConfirmDialog().setCancelText(message.getCancelText());
-		view.getConfirmDialog().setConfirmText(message.getOkText());
-		view.getConfirmDialog().setOpened(true);
+    /**
+     * Shows a confirmation dialog to the user.
+     *
+     * @param message the message to display in the confirmation dialog
+     * @param onOk callback to execute if user confirms
+     * @param onCancel callback to execute if user cancels
+     */
+    private void showConfirmationRequest(
+            Message message, Runnable onOk, Runnable onCancel) {
+        view.getConfirmDialog().setText(message.getMessage());
+        view.getConfirmDialog().setHeader(message.getCaption());
+        view.getConfirmDialog().setCancelText(message.getCancelText());
+        view.getConfirmDialog().setConfirmText(message.getOkText());
+        view.getConfirmDialog().setOpened(true);
 
-		final Registration okRegistration =
-			view.getConfirmDialog().addConfirmListener(e -> onOk.run());
-		final Registration cancelRegistration =
-			view.getConfirmDialog().addCancelListener(e -> onCancel.run());
-		state.updateRegistration(okRegistration, cancelRegistration);
-	}
+        final Registration okRegistration =
+                view.getConfirmDialog().addConfirmListener(e -> onOk.run());
+        final Registration cancelRegistration =
+                view.getConfirmDialog().addCancelListener(e -> onCancel.run());
+        state.updateRegistration(okRegistration, cancelRegistration);
+    }
 
-	public boolean loadEntity(Long id, CrudOperationListener<T> onSuccess) {
-		return executeOperation(() -> {
-			state.updateEntity(crudService.load(id), false);
-			onSuccess.execute(state.getEntity());
-		});
-	}
+    /**
+     * Loads an entity by ID.
+     *
+     * @param id the ID of the entity to load
+     * @param onSuccess callback to execute when entity is successfully loaded
+     * @return true if the entity was loaded successfully, false otherwise
+     */
+    public boolean loadEntity(Long id, CrudOperationListener<T> onSuccess) {
+        return executeOperation(() -> {
+            state.updateEntity(crudService.load(id), false);
+            onSuccess.execute(state.getEntity());
+        });
+    }
 
-	public T createNew() {
-		state.updateEntity(crudService.createNew(currentUser.getUser()), true);
-		return state.getEntity();
-	}
+    /**
+     * Creates a new entity instance.
+     *
+     * @return the newly created entity
+     */
+    public T createNew() {
+        state.updateEntity(crudService.createNew(currentUser.getUser()), true);
+        return state.getEntity();
+    }
 
-	public T getEntity() {
-		return state.getEntity();
-	}
+    /**
+     * Gets the current entity.
+     *
+     * @return the current entity
+     */
+    public T getEntity() {
+        return state.getEntity();
+    }
 
-	public boolean isNew() {
-		return state.isNew();
-	}
+    /**
+     * Checks if the current entity is new (not yet persisted).
+     *
+     * @return true if the entity is new, false if it exists in the database
+     */
+    public boolean isNew() {
+        return state.isNew();
+    }
 
-	@FunctionalInterface
-	public interface CrudOperationListener<T> {
+    /**
+     * Functional interface for CRUD operation listeners.
+     *
+     * @param <T> the type of entity
+     */
+    @FunctionalInterface
+    public interface CrudOperationListener<T> {
 
-		void execute(T entity);
-	}
+        /**
+         * Executes the operation with the given entity.
+         *
+         * @param entity the entity to operate on
+         */
+        void execute(T entity);
+    }
 
 }
 
 /**
- * Holds variables that change.
+ * Holds the state variables for the EntityPresenter that can change during operations.
+ *
+ * @param <T> the type of entity
  */
 class EntityPresenterState<T extends AbstractEntity> {
 
-	private T entity;
-	private String entityName;
-	private Registration okRegistration;
-	private Registration cancelRegistration;
-	private boolean isNew = false;
+    private T entity;
+    private String entityName;
+    private Registration okRegistration;
+    private Registration cancelRegistration;
+    private boolean isNew = false;
 
-	void updateEntity(T entity, boolean isNew) {
-		this.entity = entity;
-		this.entityName = EntityUtil.getName(this.entity.getClass());
-		this.isNew = isNew;
-	}
+    /**
+     * Updates the current entity and its state.
+     *
+     * @param entity the entity to set as current
+     * @param isNew whether the entity is new (not persisted)
+     */
+    void updateEntity(T entity, boolean isNew) {
+        this.entity = entity;
+        this.entityName = EntityUtil.getName(this.entity.getClass());
+        this.isNew = isNew;
+    }
 
-	void updateRegistration(
-		Registration okRegistration, Registration cancelRegistration) {
-		clearRegistration(this.okRegistration);
-		clearRegistration(this.cancelRegistration);
-		this.okRegistration = okRegistration;
-		this.cancelRegistration = cancelRegistration;
-	}
+    /**
+     * Updates the dialog registration listeners.
+     *
+     * @param okRegistration registration for the OK button listener
+     * @param cancelRegistration registration for the cancel button listener
+     */
+    void updateRegistration(
+            Registration okRegistration, Registration cancelRegistration) {
+        clearRegistration(this.okRegistration);
+        clearRegistration(this.cancelRegistration);
+        this.okRegistration = okRegistration;
+        this.cancelRegistration = cancelRegistration;
+    }
 
-	void clear() {
-		this.entity = null;
-		this.entityName = null;
-		this.isNew = false;
-		updateRegistration(null, null);
-	}
+    /**
+     * Clears the current state, removing registrations and resetting entity data.
+     */
+    void clear() {
+        this.entity = null;
+        this.entityName = null;
+        this.isNew = false;
+        updateRegistration(null, null);
+    }
 
-	private void clearRegistration(Registration registration) {
-		if (registration != null) {
-			registration.remove();
-		}
-	}
+    /**
+     * Clears a registration if it exists.
+     *
+     * @param registration the registration to clear
+     */
+    private void clearRegistration(Registration registration) {
+        if (registration != null) {
+            registration.remove();
+        }
+    }
 
-	public T getEntity() {
-		return entity;
-	}
+    /**
+     * Gets the current entity.
+     *
+     * @return the current entity
+     */
+    public T getEntity() {
+        return entity;
+    }
 
-	public String getEntityName() {
-		return entityName;
-	}
+    /**
+     * Gets the entity name.
+     *
+     * @return the entity name
+     */
+    public String getEntityName() {
+        return entityName;
+    }
 
-	public boolean isNew() {
-		return isNew;
-	}
+    /**
+     * Checks if the current entity is new.
+     *
+     * @return true if the entity is new, false otherwise
+     */
+    public boolean isNew() {
+        return isNew;
+    }
 
 }

@@ -15,7 +15,7 @@ import com.vaadin.starter.bakery.backend.data.entity.OrderItem;
 import com.vaadin.starter.bakery.backend.data.entity.OrderSummary;
 
 /**
- * Help class to get ready to use LitRenderer for displaying order card list on the Storefront and Dashboard grids.
+ * Helper class to get ready to use LitRenderer for displaying order card list on the Storefront and Dashboard grids.
  * Using LitRenderer instead of ComponentRenderer optimizes the CPU and memory consumption.
  * <p>
  * In addition, component includes an optional header above the order card. It is used
@@ -25,64 +25,125 @@ import com.vaadin.starter.bakery.backend.data.entity.OrderSummary;
  */
 public class OrderCard {
 
-	public static LitRenderer<Order> getTemplate() {
-		return LitRenderer.of(
-				  "<order-card"
-				+ "  .header='${item.header}'"
-				+ "  .orderCard='${item.orderCard}'"
-				+ "  @card-click='${cardClick}'>"
-				+ "</order-card>");
-	}
-	
-	public static OrderCard create(OrderSummary order) {
-		return new OrderCard(order);
-	}
+    /**
+     * Creates a LitRenderer template for displaying order cards.
+     *
+     * @return a LitRenderer configured for order card display
+     */
+    public static LitRenderer<Order> getTemplate() {
+        return LitRenderer.of(
+                "<order-card"
+                        + "  .header='${item.header}'"
+                        + "  .orderCard='${item.orderCard}'"
+                        + "  @card-click='${cardClick}'>"
+                        + "</order-card>");
+    }
 
-	private boolean recent, inWeek;
+    /**
+     * Creates a new OrderCard instance from an OrderSummary.
+     *
+     * @param order the OrderSummary to create the card for
+     * @return a new OrderCard instance
+     */
+    public static OrderCard create(OrderSummary order) {
+        return new OrderCard(order);
+    }
 
-	private final OrderSummary order;
-	
-	public OrderCard(OrderSummary order) {
-		this.order = order;
-		LocalDate now = LocalDate.now();
-		LocalDate date = order.getDueDate();
-		recent = date.equals(now) || date.equals(now.minusDays(1));
-		inWeek = !recent && now.getYear() == date.getYear() && now.get(WEEK_OF_YEAR_FIELD) == date.get(WEEK_OF_YEAR_FIELD);
-	}
+    private boolean recent, inWeek;
 
-	public String getPlace() {
-		return recent || inWeek ? order.getPickupLocation().getName() : null;
-	}
+    private final OrderSummary order;
 
-	public String getTime() {
-		return recent ? HOUR_FORMATTER.format(order.getDueTime()) : null;
-	}
+    /**
+     * Constructs a new OrderCard for the specified order summary.
+     *
+     * @param order the OrderSummary to display in the card
+     */
+    public OrderCard(OrderSummary order) {
+        this.order = order;
+        LocalDate now = LocalDate.now();
+        LocalDate date = order.getDueDate();
+        recent = date.equals(now) || date.equals(now.minusDays(1));
+        inWeek = !recent && now.getYear() == date.getYear() && now.get(WEEK_OF_YEAR_FIELD) == date.get(WEEK_OF_YEAR_FIELD);
+    }
 
-	public String getShortDay() {
-		return inWeek ? SHORT_DAY_FORMATTER.format(order.getDueDate()) : null;
-	}
+    /**
+     * Gets the pickup location name for display.
+     *
+     * @return the pickup location name for recent or in-week orders, null otherwise
+     */
+    public String getPlace() {
+        return recent || inWeek ? order.getPickupLocation().getName() : null;
+    }
 
-	public String getSecondaryTime() {
-		return inWeek ? HOUR_FORMATTER.format(order.getDueTime()) : null;
-	}
+    /**
+     * Gets the formatted time for recent orders.
+     *
+     * @return the formatted time for recent orders, null otherwise
+     */
+    public String getTime() {
+        return recent ? HOUR_FORMATTER.format(order.getDueTime()) : null;
+    }
 
-	public String getMonth() {
-		return recent || inWeek ? null : MONTH_AND_DAY_FORMATTER.format(order.getDueDate());
-	}
+    /**
+     * Gets the short day format for orders within the current week.
+     *
+     * @return the short day format for in-week orders, null otherwise
+     */
+    public String getShortDay() {
+        return inWeek ? SHORT_DAY_FORMATTER.format(order.getDueDate()) : null;
+    }
 
-	public String getFullDay() {
-		return recent || inWeek ? null : WEEKDAY_FULLNAME_FORMATTER.format(order.getDueDate());
-	}
+    /**
+     * Gets the secondary time display for in-week orders.
+     *
+     * @return the formatted time for in-week orders, null otherwise
+     */
+    public String getSecondaryTime() {
+        return inWeek ? HOUR_FORMATTER.format(order.getDueTime()) : null;
+    }
 
-	public String getState() {
-		return order.getState().toString();
-	}
+    /**
+     * Gets the month and day format for older orders.
+     *
+     * @return the month and day format for non-recent, non-week orders, null otherwise
+     */
+    public String getMonth() {
+        return recent || inWeek ? null : MONTH_AND_DAY_FORMATTER.format(order.getDueDate());
+    }
 
-	public String getFullName() {
-		return order.getCustomer().getFullName();
-	}
+    /**
+     * Gets the full weekday name for older orders.
+     *
+     * @return the full weekday name for non-recent, non-week orders, null otherwise
+     */
+    public String getFullDay() {
+        return recent || inWeek ? null : WEEKDAY_FULLNAME_FORMATTER.format(order.getDueDate());
+    }
 
-	public List<OrderItem> getItems() {
-		return order.getItems();
-	}
+    /**
+     * Gets the order state as a string.
+     *
+     * @return the order state string
+     */
+    public String getState() {
+        return order.getState().toString();
+    }
+
+    /**
+     * Gets the customer's full name.
+     *
+     * @return the customer's full name
+     */
+    public String getFullName() {
+        return order.getCustomer().getFullName();
+    }
+
+    /**
+     * Gets the list of order items.
+     *
+     * @return the list of order items
+     */
+    public List<OrderItem> getItems() {
+        return order.getItems();
+    }
 }

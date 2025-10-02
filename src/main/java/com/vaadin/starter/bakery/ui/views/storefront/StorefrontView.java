@@ -36,6 +36,11 @@ import com.vaadin.starter.bakery.ui.views.orderedit.OrderEditor;
 import static com.vaadin.starter.bakery.ui.utils.BakeryConst.EDIT_SEGMENT;
 import static com.vaadin.starter.bakery.ui.utils.BakeryConst.ORDER_ID;
 
+/**
+ * Storefront view for managing orders in the bakery application.
+ * Provides a grid view of orders with search, filtering, and order management capabilities.
+ * Supports both view and edit modes for orders.
+ */
 @Tag("storefront-view")
 @JsModule("./src/views/storefront/storefront-view.js")
 @Route(value = BakeryConst.PAGE_STOREFRONT_ORDER_TEMPLATE, layout = MainView.class)
@@ -44,129 +49,213 @@ import static com.vaadin.starter.bakery.ui.utils.BakeryConst.ORDER_ID;
 @PageTitle(BakeryConst.TITLE_STOREFRONT)
 @PermitAll
 public class StorefrontView extends LitTemplate
-		implements HasLogger, BeforeEnterObserver, EntityView<Order> {
+        implements HasLogger, BeforeEnterObserver, EntityView<Order> {
 
-	@Id("search")
-	private SearchBar searchBar;
+    @Id("search")
+    private SearchBar searchBar;
 
-	@Id("grid")
-	private Grid<Order> grid;
+    @Id("grid")
+    private Grid<Order> grid;
 
-	@Id("dialog")
-	private Dialog dialog;
+    @Id("dialog")
+    private Dialog dialog;
 
-	private ConfirmDialog confirmation;
+    private ConfirmDialog confirmation;
 
-	private final OrderEditor orderEditor;
+    private final OrderEditor orderEditor;
 
-	private final OrderDetails orderDetails = new OrderDetails();
+    private final OrderDetails orderDetails = new OrderDetails();
 
-	private final OrderPresenter presenter;
+    private final OrderPresenter presenter;
 
-	@Autowired
-	public StorefrontView(OrderPresenter presenter, OrderEditor orderEditor) {
-		this.presenter = presenter;
-		this.orderEditor = orderEditor;
+    /**
+     * Constructs a new StorefrontView with the specified dependencies.
+     *
+     * @param presenter the OrderPresenter for handling business logic
+     * @param orderEditor the OrderEditor for editing orders
+     */
+    @Autowired
+    public StorefrontView(OrderPresenter presenter, OrderEditor orderEditor) {
+        this.presenter = presenter;
+        this.orderEditor = orderEditor;
 
-		searchBar.setActionText("New order");
-		searchBar.setCheckboxText("Show past orders");
-		searchBar.setPlaceHolder("Search");
+        searchBar.setActionText("New order");
+        searchBar.setCheckboxText("Show past orders");
+        searchBar.setPlaceHolder("Search");
 
-		grid.setSelectionMode(Grid.SelectionMode.NONE);
+        grid.setSelectionMode(Grid.SelectionMode.NONE);
 
-		grid.addColumn(OrderCard.getTemplate()
-				.withProperty("orderCard", OrderCard::create)
-				.withProperty("header", order -> presenter.getHeaderByOrderId(order.getId()))
-				.withFunction("cardClick",
-						order -> UI.getCurrent().navigate(BakeryConst.PAGE_STOREFRONT + "/" + order.getId())));
+        grid.addColumn(OrderCard.getTemplate()
+                .withProperty("orderCard", OrderCard::create)
+                .withProperty("header", order -> presenter.getHeaderByOrderId(order.getId()))
+                .withFunction("cardClick",
+                        order -> UI.getCurrent().navigate(BakeryConst.PAGE_STOREFRONT + "/" + order.getId())));
 
-		getSearchBar().addFilterChangeListener(
-				e -> presenter.filterChanged(getSearchBar().getFilter(), getSearchBar().isCheckboxChecked()));
-		getSearchBar().addActionClickListener(e -> presenter.createNewOrder());
+        getSearchBar().addFilterChangeListener(
+                e -> presenter.filterChanged(getSearchBar().getFilter(), getSearchBar().isCheckboxChecked()));
+        getSearchBar().addActionClickListener(e -> presenter.createNewOrder());
 
-		presenter.init(this);
+        presenter.init(this);
 
-		dialog.addDialogCloseActionListener(e -> presenter.cancel());
-	}
+        dialog.addDialogCloseActionListener(e -> presenter.cancel());
+    }
 
-	@Override
-	public ConfirmDialog getConfirmDialog() {
-		return confirmation;
-	}
+    /**
+     * Gets the confirmation dialog used for user confirmations.
+     *
+     * @return the ConfirmDialog instance
+     */
+    @Override
+    public ConfirmDialog getConfirmDialog() {
+        return confirmation;
+    }
 
-	@Override
-	public void setConfirmDialog(ConfirmDialog confirmDialog) {
-		this.confirmation = confirmDialog;
-	}
+    /**
+     * Sets the confirmation dialog for user confirmations.
+     *
+     * @param confirmDialog the ConfirmDialog to set
+     */
+    @Override
+    public void setConfirmDialog(ConfirmDialog confirmDialog) {
+        this.confirmation = confirmDialog;
+    }
 
-	void setOpened(boolean opened) {
-		dialog.setOpened(opened);
-	}
+    /**
+     * Sets the opened state of the order dialog.
+     *
+     * @param opened true to open the dialog, false to close it
+     */
+    void setOpened(boolean opened) {
+        dialog.setOpened(opened);
+    }
 
-	@Override
-	public void beforeEnter(BeforeEnterEvent event) {
-		Optional<Long> orderId = event.getRouteParameters().getLong(ORDER_ID);
-		if (orderId.isPresent()) {
-			boolean isEditView = EDIT_SEGMENT.equals(getLastSegment(event));
-			presenter.onNavigation(orderId.get(), isEditView);
-		} else if (dialog.isOpened()) {
-			presenter.closeSilently();
-		}
-	}
+    /**
+     * Handles before navigation events to load orders based on URL parameters.
+     *
+     * @param event the before navigation event
+     */
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        Optional<Long> orderId = event.getRouteParameters().getLong(ORDER_ID);
+        if (orderId.isPresent()) {
+            boolean isEditView = EDIT_SEGMENT.equals(getLastSegment(event));
+            presenter.onNavigation(orderId.get(), isEditView);
+        } else if (dialog.isOpened()) {
+            presenter.closeSilently();
+        }
+    }
 
-	void navigateToMainView() {
-		getUI().ifPresent(ui -> ui.navigate(BakeryConst.PAGE_STOREFRONT));
-	}
+    /**
+     * Navigates to the main storefront view.
+     */
+    void navigateToMainView() {
+        getUI().ifPresent(ui -> ui.navigate(BakeryConst.PAGE_STOREFRONT));
+    }
 
-	@Override
-	public boolean isDirty() {
-		return orderEditor.hasChanges() || orderDetails.isDirty();
-	}
+    /**
+     * Checks if there are unsaved changes in the current order.
+     *
+     * @return true if there are unsaved changes, false otherwise
+     */
+    @Override
+    public boolean isDirty() {
+        return orderEditor.hasChanges() || orderDetails.isDirty();
+    }
 
-	@Override
-	public void write(Order entity) throws ValidationException {
-		orderEditor.write(entity);
-	}
+    /**
+     * Writes form data to the order entity.
+     *
+     * @param entity the order entity to write data to
+     * @throws ValidationException if validation fails during write operation
+     */
+    @Override
+    public void write(Order entity) throws ValidationException {
+        orderEditor.write(entity);
+    }
 
-	public Stream<HasValue<?, ?>> validate() {
-		return orderEditor.validate();
-	}
+    /**
+     * Validates all form fields and returns a stream of fields with validation errors.
+     *
+     * @return a stream of fields that have validation errors
+     */
+    public Stream<HasValue<?, ?>> validate() {
+        return orderEditor.validate();
+    }
 
-	SearchBar getSearchBar() {
-		return searchBar;
-	}
+    /**
+     * Gets the search bar component.
+     *
+     * @return the SearchBar instance
+     */
+    SearchBar getSearchBar() {
+        return searchBar;
+    }
 
-	OrderEditor getOpenedOrderEditor() {
-		return orderEditor;
-	}
+    /**
+     * Gets the order editor component.
+     *
+     * @return the OrderEditor instance
+     */
+    OrderEditor getOpenedOrderEditor() {
+        return orderEditor;
+    }
 
-	OrderDetails getOpenedOrderDetails() {
-		return orderDetails;
-	}
+    /**
+     * Gets the order details component.
+     *
+     * @return the OrderDetails instance
+     */
+    OrderDetails getOpenedOrderDetails() {
+        return orderDetails;
+    }
 
-	Grid<Order> getGrid() {
-		return grid;
-	}
+    /**
+     * Gets the orders grid component.
+     *
+     * @return the Grid instance
+     */
+    Grid<Order> getGrid() {
+        return grid;
+    }
 
-	@Override
-	public void clear() {
-		orderDetails.setDirty(false);
-		orderEditor.clear();
-	}
+    /**
+     * Clears the form and resets the dirty state.
+     */
+    @Override
+    public void clear() {
+        orderDetails.setDirty(false);
+        orderEditor.clear();
+    }
 
-	void setDialogElementsVisibility(boolean editing) {
-		dialog.add(editing ? orderEditor : orderDetails);
-		orderEditor.setVisible(editing);
-		orderDetails.setVisible(!editing);
-	}
+    /**
+     * Sets the visibility of dialog elements based on editing mode.
+     *
+     * @param editing true to show editor, false to show details view
+     */
+    void setDialogElementsVisibility(boolean editing) {
+        dialog.add(editing ? orderEditor : orderDetails);
+        orderEditor.setVisible(editing);
+        orderDetails.setVisible(!editing);
+    }
 
-	@Override
-	public String getEntityName() {
-		return EntityUtil.getName(Order.class);
-	}
+    /**
+     * Gets the entity name for display purposes.
+     *
+     * @return the entity name as a string
+     */
+    @Override
+    public String getEntityName() {
+        return EntityUtil.getName(Order.class);
+    }
 
-	private String getLastSegment(BeforeEnterEvent event) {
-		List<String> segments = event.getLocation().getSegments();
-		return segments.get(segments.size() - 1);
-	}
+    /**
+     * Gets the last segment of the current URL path.
+     *
+     * @param event the before navigation event
+     * @return the last segment of the URL path
+     */
+    private String getLastSegment(BeforeEnterEvent event) {
+        List<String> segments = event.getLocation().getSegments();
+        return segments.get(segments.size() - 1);
+    }
 }

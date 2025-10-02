@@ -18,6 +18,12 @@ import com.vaadin.starter.bakery.ui.components.SearchBar;
 import com.vaadin.starter.bakery.ui.utils.TemplateUtil;
 import com.vaadin.starter.bakery.ui.views.HasNotifications;
 
+/**
+ * Abstract base class for CRUD (Create, Read, Update, Delete) views in the Bakery application.
+ * Provides common functionality for entity management including filtering, editing, and navigation.
+ *
+ * @param <E> the type of entity managed by this view, must extend AbstractEntity
+ */
 public abstract class AbstractBakeryCrudView<E extends AbstractEntity> extends VerticalLayout
         implements HasUrlParameter<Long>, HasNotifications {
 
@@ -28,12 +34,36 @@ public abstract class AbstractBakeryCrudView<E extends AbstractEntity> extends V
 
     private final Crud<E> crud;
 
+    /**
+     * Gets the base page path for navigation.
+     *
+     * @return the base page path as a String
+     */
     protected abstract String getBasePage();
 
+    /**
+     * Configures the grid columns and properties for the entity type.
+     *
+     * @param grid the grid to configure
+     */
     protected abstract void setupGrid(Grid<E> grid);
 
+    /**
+     * Creates a new instance of the entity.
+     *
+     * @return a new entity instance
+     */
     protected abstract E createItem();
 
+    /**
+     * Constructs an AbstractBakeryCrudView with the specified dependencies.
+     *
+     * @param beanType the class type of the entity
+     * @param service the service for entity operations
+     * @param grid the grid component for displaying entities
+     * @param editor the editor component for creating/editing entities
+     * @param currentUser the currently authenticated user
+     */
     public AbstractBakeryCrudView(Class<E> beanType, FilterableCrudService<E> service,
                                   Grid<E> grid, CrudEditor<E> editor, CurrentUser currentUser) {
         setHeightFull();
@@ -77,6 +107,11 @@ public abstract class AbstractBakeryCrudView<E extends AbstractEntity> extends V
         add(searchBar, crud);
     }
 
+    /**
+     * Sets up event listeners for CRUD operations.
+     *
+     * @param entityPresenter the presenter handling entity operations
+     */
     private void setupCrudEventListeners(CrudEntityPresenter<E> entityPresenter) {
         Consumer<E> onSuccess = entity -> navigateToEntity(null);
         Consumer<E> onFail = entity -> {
@@ -96,10 +131,24 @@ public abstract class AbstractBakeryCrudView<E extends AbstractEntity> extends V
                 entityPresenter.delete(e.getItem(), onSuccess, onFail));
     }
 
+    /**
+     * Navigates to the entity view with the specified ID.
+     * If id is null, navigates to the base page without entity selection.
+     *
+     * @param id the entity ID to navigate to, or null for base page
+     */
     protected void navigateToEntity(String id) {
         getUI().ifPresent(ui -> ui.navigate(TemplateUtil.generateLocation(getBasePage(), id)));
     }
 
+    /**
+     * Handles URL parameters for entity selection and editing.
+     * If an ID is provided, loads and edits the corresponding entity.
+     * If no ID is provided, closes any open editor.
+     *
+     * @param event the before navigation event
+     * @param id the optional entity ID from the URL parameter
+     */
     @Override
     public void setParameter(BeforeEvent event, @OptionalParameter Long id) {
         if (id != null) {

@@ -45,12 +45,23 @@ import com.vaadin.starter.bakery.ui.MainView;
 @EntityScan(basePackageClasses = { User.class })
 public class Application extends SpringBootServletInitializer {
 
-	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
-	}
+    /**
+     * Main method that launches the Spring Boot application.
+     *
+     * @param args command line arguments passed to the application
+     */
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
 
-	@Override
-	protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-		return application.sources(Application.class);
-	}
+    /**
+     * Configures the application when deployed as a WAR file.
+     *
+     * @param application the Spring application builder
+     * @return the configured Spring application builder
+     */
+    @Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+        return application.sources(Application.class);
+    }
 }

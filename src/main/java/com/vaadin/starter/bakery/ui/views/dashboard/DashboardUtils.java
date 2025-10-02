@@ -13,104 +13,148 @@ import com.vaadin.starter.bakery.backend.data.entity.OrderSummary;
 import com.vaadin.starter.bakery.ui.views.storefront.beans.OrdersCountData;
 import com.vaadin.starter.bakery.ui.views.storefront.beans.OrdersCountDataWithChart;
 
+/**
+ * Utility class for generating dashboard data and statistics.
+ * Provides methods to process delivery statistics and order data for display on the dashboard.
+ */
 public class DashboardUtils {
 
+    private static final String NEXT_DELIVERY_PATTERN = "Next Delivery %s";
 
-	private static final String NEXT_DELIVERY_PATTERN = "Next Delivery %s";
+    /**
+     * Generates today's orders count data with chart information and next delivery time.
+     *
+     * @param deliveryStats the delivery statistics containing today's counts
+     * @param ordersIterator iterator over order summaries to find the next delivery
+     * @return OrdersCountDataWithChart containing today's order counts and next delivery information
+     */
+    public static OrdersCountDataWithChart getTodaysOrdersCountData(DeliveryStats deliveryStats,
+                                                                    Iterator<OrderSummary> ordersIterator) {
+        OrdersCountDataWithChart ordersCountData = new OrdersCountDataWithChart("Remaining Today", null,
+                deliveryStats.getDueToday() - deliveryStats.getDeliveredToday(), deliveryStats.getDueToday());
 
-	public static OrdersCountDataWithChart getTodaysOrdersCountData(DeliveryStats deliveryStats,
-			Iterator<OrderSummary> ordersIterator) {
-		OrdersCountDataWithChart ordersCountData = new OrdersCountDataWithChart("Remaining Today", null,
-				deliveryStats.getDueToday() - deliveryStats.getDeliveredToday(), deliveryStats.getDueToday());
+        LocalDate date = LocalDate.now();
+        LocalTime time = LocalTime.now();
+        while (ordersIterator.hasNext()) {
 
-		LocalDate date = LocalDate.now();
-		LocalTime time = LocalTime.now();
-		while (ordersIterator.hasNext()) {
+            OrderSummary order = ordersIterator.next();
+            if (isOrderNextToDeliver(order, date, time)) {
+                if (order.getDueDate().isEqual(date))
+                    ordersCountData.setSubtitle(String.format(NEXT_DELIVERY_PATTERN, order.getDueTime()));
+                else
+                    ordersCountData.setSubtitle(String.format(NEXT_DELIVERY_PATTERN,
+                            order.getDueDate().getMonthValue() + "/" + order.getDueDate().getDayOfMonth()));
 
-			OrderSummary order = ordersIterator.next();
-			if (isOrderNextToDeliver(order, date, time)) {
-				if (order.getDueDate().isEqual(date))
-					ordersCountData.setSubtitle(String.format(NEXT_DELIVERY_PATTERN, order.getDueTime()));
-				else
-					ordersCountData.setSubtitle(String.format(NEXT_DELIVERY_PATTERN,
-							order.getDueDate().getMonthValue() + "/" + order.getDueDate().getDayOfMonth()));
+                break;
+            }
 
-				break;
-			}
+        }
+        return ordersCountData;
+    }
 
-		}
-		return ordersCountData;
-	}
+    /**
+     * Checks if an order is the next one to be delivered based on current date and time.
+     *
+     * @param order the order summary to check
+     * @param nowDate the current date
+     * @param nowTime the current time
+     * @return true if the order is ready and scheduled for delivery after current time
+     */
+    private static boolean isOrderNextToDeliver(OrderSummary order, LocalDate nowDate, LocalTime nowTime) {
+        // ready order starting from current time
+        return order.getState() == OrderState.READY
+                && ((order.getDueDate().isEqual(nowDate) && order.getDueTime().isAfter(nowTime))
+                || order.getDueDate().isAfter(nowDate));
+    }
 
-	private static boolean isOrderNextToDeliver(OrderSummary order, LocalDate nowDate, LocalTime nowTime) {
-		// ready order starting from current time
-		return order.getState() == OrderState.READY
-				&& ((order.getDueDate().isEqual(nowDate) && order.getDueTime().isAfter(nowTime))
-						|| order.getDueDate().isAfter(nowDate));
-	}
+    /**
+     * Generates not available orders count data for orders that will be delivered tomorrow.
+     *
+     * @param deliveryStats the delivery statistics containing not available counts
+     * @return OrdersCountData containing not available order counts
+     */
+    public static OrdersCountData getNotAvailableOrdersCountData(DeliveryStats deliveryStats) {
+        OrdersCountData ordersCountData = new OrdersCountData("Not Available", "Delivery tomorrow",
+                deliveryStats.getNotAvailableToday());
 
-	public static OrdersCountData getNotAvailableOrdersCountData(DeliveryStats deliveryStats) {
-		OrdersCountData ordersCountData = new OrdersCountData("Not Available", "Delivery tomorrow",
-				deliveryStats.getNotAvailableToday());
+        return ordersCountData;
+    }
 
-		return ordersCountData;
-	}
+    /**
+     * Generates tomorrow's orders count data with first delivery time information.
+     *
+     * @param deliveryStats the delivery statistics containing tomorrow's counts
+     * @param ordersIterator iterator over order summaries to find the first delivery time
+     * @return OrdersCountData containing tomorrow's order counts and first delivery time
+     */
+    public static OrdersCountData getTomorrowOrdersCountData(DeliveryStats deliveryStats,
+                                                             Iterator<OrderSummary> ordersIterator) {
+        OrdersCountData ordersCountData = new OrdersCountData("Tomorrow", null, deliveryStats.getDueTomorrow());
 
-	public static OrdersCountData getTomorrowOrdersCountData(DeliveryStats deliveryStats,
-			Iterator<OrderSummary> ordersIterator) {
-		OrdersCountData ordersCountData = new OrdersCountData("Tomorrow", null, deliveryStats.getDueTomorrow());
+        LocalDate date = LocalDate.now().plusDays(1);
+        LocalTime minTime = LocalTime.MAX;
+        while (ordersIterator.hasNext()) {
+            OrderSummary order = ordersIterator.next();
+            if (order.getDueDate().isBefore(date)) {
+                continue;
+            }
 
-		LocalDate date = LocalDate.now().plusDays(1);
-		LocalTime minTime = LocalTime.MAX;
-		while (ordersIterator.hasNext()) {
-			OrderSummary order = ordersIterator.next();
-			if (order.getDueDate().isBefore(date)) {
-				continue;
-			}
+            if (order.getDueDate().isEqual(date)) {
+                if (order.getDueTime().isBefore(minTime)) {
+                    minTime = order.getDueTime();
+                }
+            }
 
-			if (order.getDueDate().isEqual(date)) {
-				if (order.getDueTime().isBefore(minTime)) {
-					minTime = order.getDueTime();
-				}
-			}
+            if (order.getDueDate().isAfter(date)) {
+                break;
+            }
+        }
 
-			if (order.getDueDate().isAfter(date)) {
-				break;
-			}
-		}
+        if (!LocalTime.MAX.equals(minTime))
+            ordersCountData.setSubtitle("First delivery " + minTime);
 
-		if (!LocalTime.MAX.equals(minTime))
-			ordersCountData.setSubtitle("First delivery " + minTime);
+        return ordersCountData;
+    }
 
-		return ordersCountData;
-	}
+    /**
+     * Generates new orders count data with information about the most recent order.
+     *
+     * @param deliveryStats the delivery statistics containing new order counts
+     * @param lastOrder the most recent order to calculate time since last order
+     * @return OrdersCountData containing new order counts and time since last order
+     */
+    public static OrdersCountData getNewOrdersCountData(DeliveryStats deliveryStats, Order lastOrder) {
+        return new OrdersCountData("New", createSubtitle(lastOrder), deliveryStats.getNewOrders());
+    }
 
-	public static OrdersCountData getNewOrdersCountData(DeliveryStats deliveryStats, Order lastOrder) {
-		return new OrdersCountData("New", createSubtitle(lastOrder), deliveryStats.getNewOrders());
-	}
+    private static final String NEW_ORDERS_COUNT_SUBTITLE_PATTERN = "Last %d%s ago";
 
-	private static final String NEW_ORDERS_COUNT_SUBTITLE_PATTERN = "Last %d%s ago";
+    /**
+     * Creates a subtitle indicating how long ago the last order was placed.
+     *
+     * @param lastOrder the most recent order
+     * @return a string describing how long ago the last order was placed
+     */
+    private static String createSubtitle(Order lastOrder) {
+        LocalDateTime currTime = LocalDateTime.now();
+        LocalDateTime timestamp = lastOrder.getHistory().get(0).getTimestamp();
 
-	private static String createSubtitle(Order lastOrder) {
-		LocalDateTime currTime = LocalDateTime.now();
-		LocalDateTime timestamp = lastOrder.getHistory().get(0).getTimestamp();
+        long value = timestamp.until(currTime, ChronoUnit.DAYS);
+        if (value > 0) {
+            return String.format(NEW_ORDERS_COUNT_SUBTITLE_PATTERN, value, "d");
+        }
 
-		long value = timestamp.until(currTime, ChronoUnit.DAYS);
-		if (value > 0) {
-			return String.format(NEW_ORDERS_COUNT_SUBTITLE_PATTERN, value, "d");
-		}
+        value = timestamp.until(currTime, ChronoUnit.HOURS);
+        if (value > 0) {
+            return String.format(NEW_ORDERS_COUNT_SUBTITLE_PATTERN, value, "h");
+        }
 
-		value = timestamp.until(currTime, ChronoUnit.HOURS);
-		if (value > 0) {
-			return String.format(NEW_ORDERS_COUNT_SUBTITLE_PATTERN, value, "h");
-		}
+        value = timestamp.until(currTime, ChronoUnit.MINUTES);
+        if (value > 0) {
+            return String.format(NEW_ORDERS_COUNT_SUBTITLE_PATTERN, value, "m");
+        }
 
-		value = timestamp.until(currTime, ChronoUnit.MINUTES);
-		if (value > 0) {
-			return String.format(NEW_ORDERS_COUNT_SUBTITLE_PATTERN, value, "m");
-		}
-
-		// option if data contain orders from the future
-		return "Last just added";
-	}
+        // option if data contain orders from the future
+        return "Last just added";
+    }
 }

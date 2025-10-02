@@ -15,19 +15,33 @@ import com.vaadin.flow.router.RouterLink;
 import com.vaadin.starter.bakery.ui.MainView;
 import com.vaadin.starter.bakery.ui.utils.BakeryConst;
 
+/**
+ * Custom 404 error page that extends the default RouteNotFoundError.
+ * Provides a user-friendly error message with a link to the front page.
+ */
 @ParentLayout(MainView.class)
 @PageTitle(BakeryConst.TITLE_NOT_FOUND)
 public class CustomRouteNotFoundError extends RouteNotFoundError {
 
-	public CustomRouteNotFoundError() {
-		RouterLink link = Component.from(
-				ElementFactory.createRouterLink("", "Go to the front page."),
-				RouterLink.class);
-		getElement().appendChild(new Text("Oops you hit a 404. ").getElement(), link.getElement());
-	}
+    /**
+     * Constructs a new CustomRouteNotFoundError with a custom error message and navigation link.
+     */
+    public CustomRouteNotFoundError() {
+        RouterLink link = Component.from(
+                ElementFactory.createRouterLink("", "Go to the front page."),
+                RouterLink.class);
+        getElement().appendChild(new Text("Oops you hit a 404. ").getElement(), link.getElement());
+    }
 
-	@Override
-	public int setErrorParameter(BeforeEnterEvent event, ErrorParameter<NotFoundException> parameter) {
-		return HttpServletResponse.SC_NOT_FOUND;
-	}
+    /**
+     * Sets the error parameter and returns the appropriate HTTP status code.
+     *
+     * @param event the before navigation event
+     * @param parameter the error parameter containing the not found exception
+     * @return HTTP 404 status code
+     */
+    @Override
+    public int setErrorParameter(BeforeEnterEvent event, ErrorParameter<NotFoundException> parameter) {
+        return HttpServletResponse.SC_NOT_FOUND;
+    }
 }

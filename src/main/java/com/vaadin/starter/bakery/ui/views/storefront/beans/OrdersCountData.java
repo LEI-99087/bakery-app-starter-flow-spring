@@ -1,43 +1,87 @@
 package com.vaadin.starter.bakery.ui.views.storefront.beans;
 
+/**
+ * Represents order count data for display in the storefront dashboard.
+ * Contains title, subtitle, and count information for order statistics.
+ */
 public class OrdersCountData {
 
-	private String title;
-	private String subtitle;
-	private Integer count;
+    private String title;
+    private String subtitle;
+    private Integer count;
 
-	public String getTitle() {
-		return title;
-	}
+    /**
+     * Gets the title of the order count display.
+     *
+     * @return the title text
+     */
+    public String getTitle() {
+        return title;
+    }
 
-	public void setTitle(String title) {
-		this.title = title;
-	}
+    /**
+     * Sets the title of the order count display.
+     *
+     * @param title the title text to set
+     */
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-	public String getSubtitle() {
-		return subtitle;
-	}
+    /**
+     * Gets the subtitle of the order count display.
+     *
+     * @return the subtitle text
+     */
+    public String getSubtitle() {
+        return subtitle;
+    }
 
-	public void setSubtitle(String subtitle) {
-		this.subtitle = subtitle;
-	}
+    /**
+     * Sets the subtitle of the order count display.
+     *
+     * @param subtitle the subtitle text to set
+     */
+    public void setSubtitle(String subtitle) {
+        this.subtitle = subtitle;
+    }
 
-	public Integer getCount() {
-		return count;
-	}
+    /**
+     * Gets the order count value.
+     *
+     * @return the order count
+     */
+    public Integer getCount() {
+        return count;
+    }
 
-	public void setCount(Integer count) {
-		this.count = count;
-	}
+    /**
+     * Sets the order count value.
+     *
+     * @param count the order count to set
+     */
+    public void setCount(Integer count) {
+        this.count = count;
+    }
 
-	public OrdersCountData() {
+    /**
+     * Constructs an empty OrdersCountData instance.
+     */
+    public OrdersCountData() {
 
-	}
+    }
 
-	public OrdersCountData(String title, String subtitle, Integer count) {
-		this.title = title;
-		this.subtitle = subtitle;
-		this.count = count;
-	}
+    /**
+     * Constructs an OrdersCountData instance with the specified values.
+     *
+     * @param title the title text
+     * @param subtitle the subtitle text
+     * @param count the order count value
+     */
+    public OrdersCountData(String title, String subtitle, Integer count) {
+        this.title = title;
+        this.subtitle = subtitle;
+        this.count = count;
+    }
 
 }

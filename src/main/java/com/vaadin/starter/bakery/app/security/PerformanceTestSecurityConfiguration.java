@@ -19,16 +19,28 @@ import org.springframework.security.core.userdetails.User;
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import com.vaadin.starter.bakery.backend.data.Role;
 
-
-
 /**
- * Allows accessing all views without login for performance testing.
+ * Security configuration for performance testing that allows accessing all views without login.
+ * This configuration is only active when the "performance-test" profile is enabled.
+ * It configures Spring Security to permit all requests and sets up an anonymous user
+ * with admin privileges for testing purposes.
+ *
+ * @see VaadinWebSecurity
+ * @see Role
  */
 @Configuration
 @Order(1)
 @Profile("performance-test")
 public class PerformanceTestSecurityConfiguration extends VaadinWebSecurity {
 
+    /**
+     * Configures HTTP security for performance testing by disabling CSRF protection,
+     * permitting all requests without authentication, and setting up an anonymous user
+     * with admin role and all available authorities.
+     *
+     * @param http the HttpSecurity to modify
+     * @throws Exception if an error occurs when applying the configuration
+     */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
@@ -37,16 +49,16 @@ public class PerformanceTestSecurityConfiguration extends VaadinWebSecurity {
 
             // Allow all requests by anonymous users
             .authorizeHttpRequests(authz -> authz
-                .anyRequest().permitAll()
+                    .anyRequest().permitAll()
             )
 
             // Define the anonymous user with custom principal and roles
             .anonymous(anon -> anon
-                .principal(new User("admin@vaadin.com", "",
-                    List.of(new SimpleGrantedAuthority("admin"))))
-                .authorities(Arrays.stream(Role.getAllRoles())
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toList()))
+                    .principal(new User("admin@vaadin.com", "",
+                            List.of(new SimpleGrantedAuthority("admin"))))
+                    .authorities(Arrays.stream(Role.getAllRoles())
+                            .map(SimpleGrantedAuthority::new)
+                            .collect(Collectors.toList()))
             );
     }
 

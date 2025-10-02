@@ -13,45 +13,85 @@ import com.vaadin.starter.bakery.backend.data.entity.PickupLocation;
 import com.vaadin.starter.bakery.backend.data.entity.User;
 import com.vaadin.starter.bakery.backend.repositories.PickupLocationRepository;
 
+/**
+ * Service class for managing PickupLocation entities.
+ * Provides business logic for pickup location operations including filtering,
+ * counting, and retrieving default locations.
+ */
 @Service
 public class PickupLocationService implements FilterableCrudService<PickupLocation>{
 
-	private final PickupLocationRepository pickupLocationRepository;
+    private final PickupLocationRepository pickupLocationRepository;
 
-	@Autowired
-	public PickupLocationService(PickupLocationRepository pickupLocationRepository) {
-		this.pickupLocationRepository = pickupLocationRepository;
-	}
+    /**
+     * Constructs a PickupLocationService with the specified PickupLocationRepository.
+     *
+     * @param pickupLocationRepository the repository used for pickup location data access
+     */
+    @Autowired
+    public PickupLocationService(PickupLocationRepository pickupLocationRepository) {
+        this.pickupLocationRepository = pickupLocationRepository;
+    }
 
-	public Page<PickupLocation> findAnyMatching(Optional<String> filter, Pageable pageable) {
-		if (filter.isPresent()) {
-			String repositoryFilter = "%" + filter.get() + "%";
-			return pickupLocationRepository.findByNameLikeIgnoreCase(repositoryFilter, pageable);
-		} else {
-			return pickupLocationRepository.findAll(pageable);
-		}
-	}
+    /**
+     * Finds pickup locations matching the given filter with pagination support.
+     *
+     * @param filter an optional filter string to match against pickup location names
+     * @param pageable pagination information (page number, size, and sorting)
+     * @return a page of matching pickup locations
+     */
+    public Page<PickupLocation> findAnyMatching(Optional<String> filter, Pageable pageable) {
+        if (filter.isPresent()) {
+            String repositoryFilter = "%" + filter.get() + "%";
+            return pickupLocationRepository.findByNameLikeIgnoreCase(repositoryFilter, pageable);
+        } else {
+            return pickupLocationRepository.findAll(pageable);
+        }
+    }
 
-	public long countAnyMatching(Optional<String> filter) {
-		if (filter.isPresent()) {
-			String repositoryFilter = "%" + filter.get() + "%";
-			return pickupLocationRepository.countByNameLikeIgnoreCase(repositoryFilter);
-		} else {
-			return pickupLocationRepository.count();
-		}
-	}
+    /**
+     * Counts the number of pickup locations matching the given filter.
+     *
+     * @param filter an optional filter string to match against pickup location names
+     * @return the count of matching pickup locations
+     */
+    public long countAnyMatching(Optional<String> filter) {
+        if (filter.isPresent()) {
+            String repositoryFilter = "%" + filter.get() + "%";
+            return pickupLocationRepository.countByNameLikeIgnoreCase(repositoryFilter);
+        } else {
+            return pickupLocationRepository.count();
+        }
+    }
 
-	public PickupLocation getDefault() {
-		return findAnyMatching(Optional.empty(), PageRequest.of(0, 1)).iterator().next();
-	}
+    /**
+     * Gets the default pickup location.
+     * Returns the first pickup location from the unfiltered results.
+     *
+     * @return the default pickup location
+     */
+    public PickupLocation getDefault() {
+        return findAnyMatching(Optional.empty(), PageRequest.of(0, 1)).iterator().next();
+    }
 
-	@Override
-	public JpaRepository<PickupLocation, Long> getRepository() {
-		return pickupLocationRepository;
-	}
+    /**
+     * Gets the PickupLocationRepository instance.
+     *
+     * @return the PickupLocationRepository instance
+     */
+    @Override
+    public JpaRepository<PickupLocation, Long> getRepository() {
+        return pickupLocationRepository;
+    }
 
-	@Override
-	public PickupLocation createNew(User currentUser) {
-		return new PickupLocation();
-	}
+    /**
+     * Creates a new pickup location instance.
+     *
+     * @param currentUser the user creating the pickup location
+     * @return a new PickupLocation instance
+     */
+    @Override
+    public PickupLocation createNew(User currentUser) {
+        return new PickupLocation();
+    }
 }

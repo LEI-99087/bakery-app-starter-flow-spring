@@ -15,54 +15,66 @@ import com.vaadin.flow.data.binder.ValidationException;
  */
 public interface EntityView<T> extends HasConfirmation, HasNotifications {
 
-	/**
-	 * Shows an error notification with a given text.
-	 *
-	 * @param message a user-friendly error message
-	 * @param isPersistent if <code>true</code> the message requires a user
-	 *                     action to disappear (if <code>false</code> it
-	 *                     disappears automatically after some time)
-	 */
-	default void showError(String message, boolean isPersistent) {
-		showNotification(message, isPersistent);
-	}
+    /**
+     * Shows an error notification with a given text.
+     *
+     * @param message a user-friendly error message
+     * @param isPersistent if <code>true</code> the message requires a user
+     *                     action to disappear (if <code>false</code> it
+     *                     disappears automatically after some time)
+     */
+    default void showError(String message, boolean isPersistent) {
+        showNotification(message, isPersistent);
+    }
 
-	/**
-	 * Returns the current dirty state of the entity dialog.
-	 *
-	 * @return <code>true</code> if the entity dialog is open in the 'edit'
-	 * mode and has unsaved changes
-	 */
-	boolean isDirty();
+    /**
+     * Returns the current dirty state of the entity dialog.
+     *
+     * @return <code>true</code> if the entity dialog is open in the 'edit'
+     * mode and has unsaved changes
+     */
+    boolean isDirty();
 
-	/**
-	 * Remove the reference to the entity and reset dirty status.
-	 */
-	void clear();
+    /**
+     * Remove the reference to the entity and reset dirty status.
+     */
+    void clear();
 
-	/**
-	 * Writes the changes from the entity dialog into the given entity instance
-	 * (see {@link com.vaadin.flow.data.binder.Binder#writeBean(Object)})
-	 *
-	 * @param entity
-	 *            the entity instance to save the changes into
-	 * @throws ValidationException
-	 *             if the values entered into the entity dialog cannot be
-	 *             converted into entity properties
-	 */
-	void write(T entity) throws ValidationException;
+    /**
+     * Writes the changes from the entity dialog into the given entity instance
+     * (see {@link com.vaadin.flow.data.binder.Binder#writeBean(Object)})
+     *
+     * @param entity the entity instance to save the changes into
+     * @throws ValidationException if the values entered into the entity dialog cannot be
+     *             converted into entity properties
+     */
+    void write(T entity) throws ValidationException;
 
-	String getEntityName();
+    /**
+     * Gets the name of the entity type for display purposes.
+     *
+     * @return the entity name as a string
+     */
+    String getEntityName();
 
-	default void showCreatedNotification() {
-		showNotification(getEntityName() + " was created");
-	}
+    /**
+     * Shows a notification indicating that an entity was successfully created.
+     */
+    default void showCreatedNotification() {
+        showNotification(getEntityName() + " was created");
+    }
 
-	default void showUpdatedNotification() {
-		showNotification(getEntityName() + " was updated");
-	}
+    /**
+     * Shows a notification indicating that an entity was successfully updated.
+     */
+    default void showUpdatedNotification() {
+        showNotification(getEntityName() + " was updated");
+    }
 
-	default void showDeletedNotification() {
-		showNotification(getEntityName() + " was deleted");
-	}
+    /**
+     * Shows a notification indicating that an entity was successfully deleted.
+     */
+    default void showDeletedNotification() {
+        showNotification(getEntityName() + " was deleted");
+    }
 }
